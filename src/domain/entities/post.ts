@@ -31,5 +31,11 @@ export interface Post {
     userId: ObjectId,
 
     createdAt?: Date,
-    updatedAt?: Date
+    updatedAt?: Date,
+
+    author?: {
+        _id: string,
+        email: string,
+        userName: string
+    }
 }

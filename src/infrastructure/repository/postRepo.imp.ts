@@ -6,23 +6,56 @@ import postModel from "../database/mongoose/post.model";
 
 export class PostRepositoryImp implements IPostRepository {
 
+    async publishStory(storyId: string): Promise<Post> {
+
+        const storyOb = new mongoose.Types.ObjectId(storyId);
+        const result = await postModel.findOneAndUpdate({ _id: storyOb }, { active: true }, { new: true });
+        if (!result) {
+            throw new Error('Couldnt publish the story.');
+        }
+
+        return result;
+    }
+
+
+    async deleteStory(storyId: string): Promise<boolean> {
+
+        const storyOb = new mongoose.Types.ObjectId(storyId);
+        const result = await postModel.deleteOne({ _id: storyOb });
+
+        if (result.deletedCount === 1) {
+            return true;
+        }
+
+        return false;
+    }
+
 
     async getStoryWithId(storyId: string): Promise<Post> {
 
         const storyOb = new mongoose.Types.ObjectId(storyId);
-        const story = await postModel.findOne({ _id: storyOb });
-        if (!story) throw new Error('No story exists.');
+        const result = await postModel.findOne({ _id: storyOb })
+            .populate('userId', 'email userName').lean();
+
+        if (!result) throw new Error('No story exists.');
+
+        const story: Post = {
+            ...result,
+            author: result.userId as any
+        }
         return story;
     }
 
 
     async getStories(limit: number, skip: number, searchTerm: string, userId?: string): Promise<{ posts: Post[], totalPages: number }> {
 
-        const matchQuery: { $match: { active: boolean, userId?: Types.ObjectId } } = { $match: { active: true } };
+        const matchQuery: { $match: { active?: boolean, userId?: Types.ObjectId } } = { $match: {} };
 
         if (userId) {
             const userOb = new mongoose.Types.ObjectId(userId);
             matchQuery.$match.userId = userOb;
+        } else {
+            matchQuery.$match.active = true;
         }
 
 

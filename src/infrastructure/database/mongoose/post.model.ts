@@ -13,7 +13,7 @@ const postSchema = new Schema<Post>({
         default: null
     },
     genre: { type: String, enum: genre, required: true, default: 'other' },
-    active: { type: Boolean, required: true, default: true },
+    active: { type: Boolean, required: true, default: false },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 }, { timestamps: true });

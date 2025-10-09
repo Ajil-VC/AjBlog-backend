@@ -17,6 +17,8 @@ userRouter.post('/refresh-token', userControllerInterface.refreshToken);
 userRouter.route('/posts')
     .post(authenticateUser, upload.single('image'), storyControllerInterface.createStory)
     .get(authenticateUser, storyControllerInterface.getCurrentUserStories)
-    .put(authenticateUser, upload.single('image'), storyControllerInterface.updateStory);
+    .put(authenticateUser, upload.single('image'), storyControllerInterface.updateStory)
+    .delete(authenticateUser, storyControllerInterface.deleteStory)
+    .patch(authenticateUser, storyControllerInterface.publishStory);
 
 userRouter.get('/all-posts', storyControllerInterface.getStories);

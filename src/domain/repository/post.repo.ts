@@ -10,4 +10,7 @@ export interface IPostRepository {
         content: string,
         genre: Genre,
         imageUrl: Attachment | null): Promise<Post>;
+    deleteStory(storyId: string): Promise<boolean>;
+
+    publishStory(storyId: string): Promise<Post>;
 }

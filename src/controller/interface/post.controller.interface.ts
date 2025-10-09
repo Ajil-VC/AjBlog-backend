@@ -7,4 +7,6 @@ export interface IStoryController {
     createStory(req: Request, res: Response, next: NextFunction): Promise<void>;
     getStories(req: Request, res: Response, next: NextFunction): Promise<void>;
     getCurrentUserStories(req: Request, res: Response, next: NextFunction): Promise<void>;
+    deleteStory(req: Request, res: Response, next: NextFunction): Promise<void>;
+    publishStory(req: Request, res: Response, next: NextFunction): Promise<void>;
 }

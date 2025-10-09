@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { IStoryController } from "./interface/post.controller.interface";
-import { ICreateStoryUsecase, IGetStoriesUsecase, IUpdateStoryUsecase } from "../application/interface/postsusecase.interface";
+import { ICreateStoryUsecase, IGetStoriesUsecase, IGetStoryWithIdUsecase, IPublishStoryUsecase, IRemoveStoryUsecase, IUpdateStoryUsecase } from "../application/interface/postsusecase.interface";
 import { RESPONSE_MESSAGES } from "./constants/httpstatusresponse";
 import { HTTP_STATUS_CODE } from "./constants/httpstatuscode";
 import { ApiResponse } from "../domain/entities/response.object";
@@ -12,8 +12,67 @@ export class StoryController implements IStoryController {
     constructor(
         private _createStory: ICreateStoryUsecase,
         private _getStories: IGetStoriesUsecase,
-        private _updateStory: IUpdateStoryUsecase
+        private _updateStory: IUpdateStoryUsecase,
+        private _getStory: IGetStoryWithIdUsecase,
+        private _deleteStory: IRemoveStoryUsecase,
+        private _publishStory: IPublishStoryUsecase
     ) { }
+
+    publishStory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+
+        try {
+
+            console.log(req.body)
+            const storyId = req.body.storyId || '';
+
+            const result = await this._publishStory.execute(storyId);
+
+            const response: ApiResponse<Post> = {
+                status: true,
+                message: RESPONSE_MESSAGES.STORY.PUBLISHED,
+                data: result
+            };
+
+            res.status(HTTP_STATUS_CODE.OK).json(response);
+
+        } catch (err) {
+            next(err);
+        }
+
+    }
+
+    deleteStory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+
+        try {
+
+            const storyId = typeof req.query.storyid !== 'string' || req.query.storyid === 'undefined' ? '' : req.query.storyid;
+
+            const result = await this._deleteStory.execute(storyId);
+
+
+            if (result) {
+                const response: ApiResponse<true> = {
+                    status: true,
+                    message: RESPONSE_MESSAGES.STORY.REMOVED,
+                    data: true
+                }
+                res.status(HTTP_STATUS_CODE.OK).json(response);
+                return;
+            }
+
+
+            const response: ApiResponse<false> = {
+                status: false,
+                message: RESPONSE_MESSAGES.COMMON.FAILED,
+                data: false
+            }
+            res.status(HTTP_STATUS_CODE.BAD_REQUEST).json(response);
+            return;
+
+        } catch (err) {
+            next(err);
+        }
+    }
 
     getCurrentUserStories = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 
@@ -84,11 +143,11 @@ export class StoryController implements IStoryController {
 
             const file = req.file as Express.Multer.File;
             const result = await this._createStory.execute(req.user.id, req.body.title, req.body.content, req.body.genre, file);
-
+            const populatedStory = await this._getStory.execute(result._id as unknown as string);
             const response: ApiResponse<Post> = {
                 status: true,
                 message: RESPONSE_MESSAGES.STORY.CREATED,
-                data: result
+                data: populatedStory
             }
 
             res.status(HTTP_STATUS_CODE.CREATED).json(response);

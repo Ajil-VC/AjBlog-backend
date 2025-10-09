@@ -13,15 +13,17 @@ export class RefreshTokenUseCase implements IRefreshTokenUsecase {
     async execute(refreshToken: string): Promise<{ status: boolean, token?: string, message?: string }> {
 
         if (typeof config.REFRESH_TOKEN_SECRET !== 'string') throw new Error('Token Secret missing.');
+
         const userPayload = jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET);
-        if (!userPayload || typeof userPayload === 'string' || !('userId' in userPayload)) {
+
+        if (!userPayload || typeof userPayload === 'string' || !('id' in userPayload)) {
 
             return {
                 status: false,
                 message: 'user payload not available.'
             }
         }
-        const userData = await this._userRepo.findUserById((userPayload as jwt.JwtPayload).userId);
+        const userData = await this._userRepo.findUserById(userPayload.id);
 
         if (!userData) {
             return { status: false, message: 'Couldnt findout the user.' };

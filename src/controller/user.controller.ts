@@ -75,8 +75,8 @@ export class UserController implements IUserController {
 
             res.cookie('refreshToken', data.refreshToken, {
                 httpOnly: true,
-                secure: false, //If it is https set it as true.
-                sameSite: 'strict',
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
                 maxAge: 7 * 24 * 60 * 60 * 1000
             })
 

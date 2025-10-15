@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { IUserController } from "./interface/user.controller.interface";
-import { ICreateUserUsecase, ISigninUsecase } from "../application/interface/userusecase.interface";
+import { ICreateUserUsecase, IRefreshTokenUsecase, ISigninUsecase } from "../application/interface/userusecase.interface";
 import { HTTP_STATUS_CODE } from "./constants/httpstatuscode";
 import { RESPONSE_MESSAGES } from "./constants/httpstatusresponse";
-import { RefreshTokenUseCase } from "../application/usecase/users/refreshtoken.usecase";
 import { ApiResponse } from "../domain/entities/response.object";
+import { ReqUser } from "../domain/entities/user";
+import { config } from "../config/config";
 
 
 export class UserController implements IUserController {
@@ -12,7 +13,7 @@ export class UserController implements IUserController {
     constructor(
         private _createUser: ICreateUserUsecase,
         private _signIn: ISigninUsecase,
-        private _refreshTokenUsecase: RefreshTokenUseCase
+        private _refreshTokenUsecase: IRefreshTokenUsecase
     ) { }
 
 
@@ -21,8 +22,7 @@ export class UserController implements IUserController {
         try {
 
             if (req.user) {
-
-                const response: ApiResponse<any> = {
+                const response: ApiResponse<ReqUser> = {
                     status: true,
                     message: RESPONSE_MESSAGES.COMMON.SUCCESS,
                     data: req.user
@@ -49,9 +49,9 @@ export class UserController implements IUserController {
 
             res.cookie('refreshToken', result.refreshToken, {
                 httpOnly: true,
-                secure: false, //If it is https set it as true.
+                secure: process.env.NODE_ENV === 'production',
                 sameSite: 'strict',
-                maxAge: 7 * 24 * 60 * 60 * 1000
+                maxAge: config.MAX_AGE
             });
 
             res.status(HTTP_STATUS_CODE.CREATED).json({
@@ -77,7 +77,7 @@ export class UserController implements IUserController {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-                maxAge: 7 * 24 * 60 * 60 * 1000
+                maxAge: config.MAX_AGE
             })
 
             res.status(HTTP_STATUS_CODE.CREATED).json({
